@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Secrets & Local Config
+.env
+*.db
+*.sqlite3
+**/*.db
+**/*.sqlite3
+uploads/
+**/uploads/
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.next/
+out/
+.cache/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

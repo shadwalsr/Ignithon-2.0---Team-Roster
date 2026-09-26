@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import EvidenceUpload from './components/EvidenceUpload';
+import ExtractionReview from './components/ExtractionReview';
 import TimelineView from './components/TimelineView';
 import IncidentReportView from './components/IncidentReportView';
 import { api, getToken, clearToken, setToken } from './api';
@@ -14,8 +15,9 @@ export default function App() {
   const [evidenceList, setEvidenceList] = useState([]);
   const [timelineData, setTimelineData] = useState(null);
   const [reportData, setReportData] = useState(null);
+  const [isInvestigatorMode, setIsInvestigatorMode] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'timeline' | 'report'
+  const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'review' | 'timeline' | 'report'
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -176,6 +178,18 @@ export default function App() {
     }
   }
 
+  async function handleToggleInvestigatorMode() {
+    if (!currentCase) return;
+    const nextMode = !isInvestigatorMode;
+    setIsInvestigatorMode(nextMode);
+    try {
+      const rep = await api.getReport(currentCase.id, nextMode);
+      setReportData(rep);
+    } catch (err) {
+      console.error("Failed to toggle investigator mode:", err);
+    }
+  }
+
   function handleEvidenceAdded(newItem, fullList) {
     if (fullList) {
       setEvidenceList(fullList);
@@ -206,6 +220,8 @@ export default function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        isInvestigatorMode={isInvestigatorMode}
+        onToggleInvestigatorMode={handleToggleInvestigatorMode}
         loading={loading}
       />
 
@@ -217,7 +233,7 @@ export default function App() {
           <div style={{
             position: 'fixed',
             top: '72px', left: 0, right: 0,
-            background: 'linear-gradient(90deg, #6366f1, #06b6d4)',
+            background: 'var(--primary)',
             color: '#fff',
             padding: '8px 20px',
             textAlign: 'center',
@@ -228,7 +244,7 @@ export default function App() {
             justifyContent: 'center',
             gap: '10px',
             zIndex: 40,
-            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)'
+            boxShadow: '0 4px 12px rgba(13, 59, 36, 0.3)'
           }}>
             <Loader2 size={16} className="animate-spin" />
             <span>{statusMessage || "Processing forensic pipeline..."}</span>
@@ -240,10 +256,10 @@ export default function App() {
           <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h1 style={{ fontSize: '1.6rem', fontWeight: 800 }}>{currentCase.title}</h1>
-                <span className="badge badge-evidence-type">Active Case</span>
+                <h1 style={{ fontSize: '1.6rem', fontWeight: 800, textTransform: 'uppercase' }}>{currentCase.title}</h1>
+                <span className="code-badge" style={{ background: 'var(--primary-container)', color: '#fff' }}>Active Case</span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--outline)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
                 Case ID: {currentCase.id} • Created: {new Date(currentCase.created_at).toLocaleDateString()}
               </div>
             </div>
@@ -251,7 +267,7 @@ export default function App() {
             {/* Case selector dropdown if multiple cases exist */}
             {cases.length > 1 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Switch Case:</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--on-surface-variant)' }}>Switch Case:</span>
                 <select
                   value={currentCase.id}
                   onChange={(e) => {
@@ -260,11 +276,12 @@ export default function App() {
                   }}
                   style={{
                     padding: '6px 12px',
-                    borderRadius: '6px',
-                    background: 'rgba(0,0,0,0.4)',
-                    color: '#fff',
-                    border: '1px solid var(--border-medium)',
-                    fontSize: '0.82rem'
+                    borderRadius: '4px',
+                    background: '#ffffff',
+                    color: 'var(--on-surface)',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '0.82rem',
+                    fontFamily: 'var(--font-mono)'
                   }}
                 >
                   {cases.map(c => (
@@ -276,18 +293,29 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 1: Evidence Ingestion & Review */}
+        {/* Step 1: Evidence Ingestion */}
         {activeTab === 'evidence' && currentCase && (
           <EvidenceUpload
             caseId={currentCase.id}
             evidenceList={evidenceList}
             onEvidenceAdded={handleEvidenceAdded}
             onBuildTimeline={handleBuildTimeline}
+            onNextToReview={() => setActiveTab('review')}
             loading={loading}
           />
         )}
 
-        {/* Tab 2: Reconciled Timeline & Gaps */}
+        {/* Step 2: Extraction Review */}
+        {activeTab === 'review' && currentCase && (
+          <ExtractionReview
+            caseId={currentCase.id}
+            evidenceList={evidenceList}
+            onUpdateEvidence={(updated) => setEvidenceList(updated)}
+            onProceedToTimeline={handleBuildTimeline}
+          />
+        )}
+
+        {/* Step 3: Reconciled Timeline & Gaps */}
         {activeTab === 'timeline' && currentCase && (
           <TimelineView
             timelineData={timelineData}
@@ -296,12 +324,14 @@ export default function App() {
           />
         )}
 
-        {/* Tab 3: Redacted Incident Report */}
+        {/* Step 4: Final Incident Report */}
         {activeTab === 'report' && currentCase && (
           <IncidentReportView
             caseId={currentCase.id}
             initialReport={reportData}
             onRefreshReport={(rep) => setReportData(rep)}
+            isInvestigatorMode={isInvestigatorMode}
+            onToggleInvestigatorMode={handleToggleInvestigatorMode}
           />
         )}
 

@@ -18,28 +18,40 @@ from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/register", response_model=UserOut)
+@router.post("/register", response_model=Token)
 def register(user_in: UserRegister, db: Session = Depends(get_db)):
-    # Parameterized query strictly preventing SQL injection
-    existing_user = db.query(User).filter(User.email == user_in.email.lower()).first()
+    email = user_in.email.lower().strip()
+    
+    # 1. Parameterized check for existing account
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this email already exists"
+            detail="An account with this email already exists. Please log in with your password."
+        )
+
+    # 2. Verify OTP sent to Gmail to confirm ownership (valid 5 min)
+    is_valid, msg = verify_and_consume_otp(email, user_in.otp)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Verification failed: {msg}"
         )
     
     user = User(
-        email=user_in.email.lower(),
+        email=email,
         password_hash=get_password_hash(user_in.password)
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     
-    return UserOut(
-        id=user.id,
-        email=user.email,
-        created_at=user.created_at.isoformat()
+    token = create_access_token(subject=user.id)
+    return Token(
+        access_token=token,
+        token_type="bearer",
+        user_id=user.id,
+        email=user.email
     )
 
 @router.post("/login", response_model=Token)

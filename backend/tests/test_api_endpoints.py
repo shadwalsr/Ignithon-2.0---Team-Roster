@@ -20,11 +20,16 @@ def test_full_api_workflow():
         assert resp.status_code == 200
         assert resp.json()["status"] == "healthy"
 
-        # 2. Register user
+        # 2. Register user with OTP verification
         user_email = "investigator@cybercell.gov.in"
+        req_res = client.post("/api/auth/otp/request", json={"email": user_email})
+        assert req_res.status_code == 200
+        dev_otp = req_res.json()["dev_otp"] or "123456"
+
         reg_resp = client.post("/api/auth/register", json={
             "email": user_email,
-            "password": "SecurePassword123!"
+            "password": "SecurePassword123!",
+            "otp": dev_otp
         })
         assert reg_resp.status_code in (200, 400)
 

@@ -4,6 +4,7 @@ from typing import Optional
 class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6, description="Password at least 6 characters")
+    otp: str = Field(min_length=6, max_length=6, description="6-digit verification code sent to this email")
 
 class UserLogin(BaseModel):
     email: EmailStr

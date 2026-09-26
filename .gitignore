@@ -34,6 +34,10 @@ wheels/
 **/*.sqlite3
 uploads/
 **/uploads/
+mcp_config.json
+**/mcp_config.json
+.agents/
+**/.agents/
 
 # Node
 node_modules/

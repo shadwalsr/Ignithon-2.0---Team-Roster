@@ -6,7 +6,7 @@ import ExtractionReview from './components/ExtractionReview';
 import TimelineView from './components/TimelineView';
 import IncidentReportView from './components/IncidentReportView';
 import { api, getToken, clearToken, setToken } from './api';
-import { ShieldAlert, Plus, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, Loader2 } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -17,12 +17,11 @@ export default function App() {
   const [reportData, setReportData] = useState(null);
   const [isInvestigatorMode, setIsInvestigatorMode] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('evidence'); // 'evidence' | 'review' | 'timeline' | 'report'
+  const [activeTab, setActiveTab] = useState('evidence');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
-  // Initial authentication check & auto-demo setup
   useEffect(() => {
     async function init() {
       const token = getToken();
@@ -42,23 +41,18 @@ export default function App() {
     init();
   }, []);
 
-  // Provide seamless frictionless demo login
   async function autoDemoLogin() {
     try {
       const email = "investigator.demo@cybercell.gov.in";
       const pwd = "DemoPassword2026!";
-      try {
-        await api.register(email, pwd);
-      } catch {
-        // already registered
-      }
+      try { await api.register(email, pwd); } catch { /* already registered */ }
       const data = await api.login(email, pwd);
       setToken(data.access_token);
       localStorage.setItem('user_email', data.email);
       setUser({ email: data.email, id: data.user_id });
       loadCases();
     } catch (e) {
-      console.log("Auto-login fallback note:", e);
+      console.log("Auto-login fallback:", e);
     }
   }
 
@@ -67,14 +61,9 @@ export default function App() {
       setLoading(true);
       const list = await api.listCases();
       setCases(list);
-      if (list.length > 0) {
-        selectCase(list[0]);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      if (list.length > 0) selectCase(list[0]);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   }
 
   async function selectCase(c) {
@@ -84,26 +73,21 @@ export default function App() {
     try {
       const evs = await api.getEvidence(c.id);
       setEvidenceList(evs);
-      // If case already has evidence, proactively try loading timeline
       if (evs.length > 0) {
         try {
           const tData = await api.buildTimeline(c.id);
           setTimelineData(tData);
-        } catch {
-          // timeline not built yet
-        }
+        } catch { /* not built yet */ }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
 
   async function handleSeedCase() {
     setLoading(true);
-    setStatusMessage("Generating comprehensive fraud scenario with crafted gaps & contradictions...");
+    setStatusMessage("Generating fraud scenario with gaps & contradictions…");
     try {
       const newCase = await api.seedCase();
-      setStatusMessage("Loading evidence artifacts...");
+      setStatusMessage("Loading evidence artifacts…");
       const list = await api.listCases();
       setCases(list);
       setCurrentCase(newCase);
@@ -111,15 +95,14 @@ export default function App() {
       const evs = await api.getEvidence(newCase.id);
       setEvidenceList(evs);
 
-      setStatusMessage("Reconciling timeline, detecting temporal gaps and contradictions...");
+      setStatusMessage("Building reconciled timeline…");
       const tData = await api.buildTimeline(newCase.id);
       setTimelineData(tData);
 
-      setStatusMessage("Generating redacted incident report...");
+      setStatusMessage("Generating redacted incident report…");
       const rep = await api.getReport(newCase.id, false);
       setReportData(rep);
 
-      // Jump directly to timeline for maximum wow-factor!
       setActiveTab('timeline');
     } catch (err) {
       alert("Failed to seed demo case: " + err.message);
@@ -130,9 +113,8 @@ export default function App() {
   }
 
   async function handleCreateNewCase() {
-    const title = prompt("Enter Case Title (e.g., 'Phishing UPI Debit Incident - A/c 4192'):");
-    if (!title || !title.trim()) return;
-
+    const title = prompt("Enter Case Title:");
+    if (!title?.trim()) return;
     try {
       setLoading(true);
       const created = await api.createCase(title.trim(), "Manual forensic investigation");
@@ -143,11 +125,8 @@ export default function App() {
       setTimelineData(null);
       setReportData(null);
       setActiveTab('evidence');
-    } catch (err) {
-      alert("Failed to create case: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { alert("Failed: " + err.message); }
+    finally { setLoading(false); }
   }
 
   async function handleBuildTimeline() {
@@ -157,11 +136,8 @@ export default function App() {
       const tData = await api.buildTimeline(currentCase.id);
       setTimelineData(tData);
       setActiveTab('timeline');
-    } catch (err) {
-      alert("Reconciliation error: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { alert("Reconciliation error: " + err.message); }
+    finally { setLoading(false); }
   }
 
   async function handleGenerateReport() {
@@ -171,11 +147,8 @@ export default function App() {
       const rep = await api.getReport(currentCase.id, false);
       setReportData(rep);
       setActiveTab('report');
-    } catch (err) {
-      alert("Report generation error: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { alert("Report error: " + err.message); }
+    finally { setLoading(false); }
   }
 
   async function handleToggleInvestigatorMode() {
@@ -185,30 +158,22 @@ export default function App() {
     try {
       const rep = await api.getReport(currentCase.id, nextMode);
       setReportData(rep);
-    } catch (err) {
-      console.error("Failed to toggle investigator mode:", err);
-    }
+    } catch (err) { console.error("Toggle failed:", err); }
   }
 
   function handleEvidenceAdded(newItem, fullList) {
-    if (fullList) {
-      setEvidenceList(fullList);
-    } else if (newItem) {
-      setEvidenceList(prev => [...prev, newItem]);
-    }
-    // Update case evidence count
-    if (currentCase) {
+    if (fullList) setEvidenceList(fullList);
+    else if (newItem) setEvidenceList(prev => [...prev, newItem]);
+    if (currentCase && newItem) {
       setCurrentCase(prev => ({
         ...prev,
-        evidence_count: (prev.evidence_count || 0) + (newItem ? 1 : 0)
+        evidence_count: (prev.evidence_count || 0) + 1
       }));
     }
   }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      
-      {/* Top Navigation */}
       <Navbar
         currentCase={currentCase}
         cases={cases}
@@ -225,75 +190,44 @@ export default function App() {
         loading={loading}
       />
 
-      {/* Main Content Area */}
-      <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: '28px 24px' }}>
-        
-        {/* Loading Overlay */}
-        {loading && (
-          <div style={{
-            position: 'fixed',
-            top: '72px', left: 0, right: 0,
-            background: 'var(--primary)',
-            color: '#fff',
-            padding: '8px 20px',
-            textAlign: 'center',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            zIndex: 40,
-            boxShadow: '0 4px 12px rgba(13, 59, 36, 0.3)'
-          }}>
-            <Loader2 size={16} className="animate-spin" />
-            <span>{statusMessage || "Processing forensic pipeline..."}</span>
-          </div>
-        )}
+      {/* Loading Banner */}
+      {loading && (
+        <div className="loading-banner">
+          <Loader2 size={15} className="animate-spin" />
+          <span>{statusMessage || "Processing…"}</span>
+        </div>
+      )}
 
-        {/* Case Header if case is selected */}
+      <main style={{ flex: 1, maxWidth: 1320, width: '100%', margin: '0 auto', padding: '32px 24px' }}>
+
+        {/* Case Header */}
         {currentCase && (
-          <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ marginBottom: 28, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h1 style={{ fontSize: '1.6rem', fontWeight: 800, textTransform: 'uppercase' }}>{currentCase.title}</h1>
-                <span className="code-badge" style={{ background: 'var(--primary-container)', color: '#fff' }}>Active Case</span>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--outline)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-                Case ID: {currentCase.id} • Created: {new Date(currentCase.created_at).toLocaleDateString()}
-              </div>
+              <h1 style={{ fontSize: 22, fontWeight: 800 }}>{currentCase.title}</h1>
+              <p className="mono" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
+                ID: {currentCase.id.substring(0, 8)} · Created {new Date(currentCase.created_at).toLocaleDateString()}
+              </p>
             </div>
-
-            {/* Case selector dropdown if multiple cases exist */}
             {cases.length > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--on-surface-variant)' }}>Switch Case:</span>
-                <select
-                  value={currentCase.id}
-                  onChange={(e) => {
-                    const found = cases.find(c => c.id === e.target.value);
-                    if (found) selectCase(found);
-                  }}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '4px',
-                    background: '#ffffff',
-                    color: 'var(--on-surface)',
-                    border: '1px solid var(--border-subtle)',
-                    fontSize: '0.82rem',
-                    fontFamily: 'var(--font-mono)'
-                  }}
-                >
-                  {cases.map(c => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
+              <select
+                className="input input-mono"
+                value={currentCase.id}
+                onChange={(e) => {
+                  const found = cases.find(c => c.id === e.target.value);
+                  if (found) selectCase(found);
+                }}
+                style={{ width: 'auto', maxWidth: 280, fontSize: 12 }}
+              >
+                {cases.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
             )}
           </div>
         )}
 
-        {/* Step 1: Evidence Ingestion */}
+        {/* Step 1 */}
         {activeTab === 'evidence' && currentCase && (
           <EvidenceUpload
             caseId={currentCase.id}
@@ -305,7 +239,7 @@ export default function App() {
           />
         )}
 
-        {/* Step 2: Extraction Review */}
+        {/* Step 2 */}
         {activeTab === 'review' && currentCase && (
           <ExtractionReview
             caseId={currentCase.id}
@@ -315,7 +249,7 @@ export default function App() {
           />
         )}
 
-        {/* Step 3: Reconciled Timeline & Gaps */}
+        {/* Step 3 */}
         {activeTab === 'timeline' && currentCase && (
           <TimelineView
             timelineData={timelineData}
@@ -324,7 +258,7 @@ export default function App() {
           />
         )}
 
-        {/* Step 4: Final Incident Report */}
+        {/* Step 4 */}
         {activeTab === 'report' && currentCase && (
           <IncidentReportView
             caseId={currentCase.id}
@@ -335,49 +269,40 @@ export default function App() {
           />
         )}
 
-        {/* Empty state if no case exists */}
+        {/* Empty state */}
         {!currentCase && !loading && (
-          <div className="glass-panel" style={{ padding: '80px 24px', textAlign: 'center', maxWidth: '600px', margin: '40px auto' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 24px var(--primary-glow)' }}>
-              <Sparkles size={32} color="var(--primary)" />
+          <div className="card fade-in" style={{ padding: '80px 32px', textAlign: 'center', maxWidth: 560, margin: '60px auto' }}>
+            <div style={{ 
+              width: 56, height: 56, borderRadius: 14, 
+              background: 'var(--green-50)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              margin: '0 auto 20px' 
+            }}>
+              <Sparkles size={28} color="var(--green-600)" />
             </div>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Welcome to Fraud Forensic Reconstruction</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '24px' }}>
-              Convert scattered, unstructured fraud evidence into a structured, privacy-redacted incident report with automated gap and contradiction detection.
+            <h2 style={{ fontSize: 22, marginBottom: 8 }}>Fraud Forensic Reconstruction</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
+              Convert scattered fraud evidence into a structured, privacy-redacted incident report with automated gap and contradiction detection.
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={handleSeedCase}
-                className="btn btn-warning"
-                style={{ padding: '12px 22px', fontSize: '0.95rem' }}
-              >
-                <Sparkles size={18} />
-                <span>Load 1-Click Demo Case</span>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={handleSeedCase} className="btn btn-primary">
+                <Sparkles size={16} />
+                Load Demo Case
               </button>
-              <button
-                onClick={handleCreateNewCase}
-                className="btn btn-secondary"
-                style={{ padding: '12px 20px', fontSize: '0.95rem' }}
-              >
-                <Plus size={18} />
-                <span>Create Blank Case</span>
+              <button onClick={handleCreateNewCase} className="btn btn-secondary">
+                <Plus size={16} />
+                New Case
               </button>
             </div>
           </div>
         )}
-
       </main>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
-        onAuthSuccess={(u) => {
-          setUser(u);
-          loadCases();
-        }}
+        onAuthSuccess={(u) => { setUser(u); loadCases(); }}
       />
-
     </div>
   );
 }

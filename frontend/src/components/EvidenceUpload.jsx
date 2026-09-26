@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Upload, FileText, Image as ImageIcon, CheckCircle2, 
-  AlertCircle, Edit3, Save, ArrowRight, ShieldCheck, Plus, Sparkles
-} from 'lucide-react';
+import { Upload, Image as ImageIcon, ArrowRight, Plus, CheckCircle2 } from 'lucide-react';
 import { api } from '../api';
 
 export default function EvidenceUpload({
@@ -17,203 +14,112 @@ export default function EvidenceUpload({
   const [rawText, setRawText] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [mode, setMode] = useState('files'); // 'files' | 'paste'
+  const [mode, setMode] = useState('files');
 
   async function handleUpload(e) {
     e.preventDefault();
     if (!rawText.trim() && !selectedFile) {
-      alert("Please enter text or select an evidence screenshot file.");
+      alert("Please enter text or select a file.");
       return;
     }
-
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("evidence_type", evidenceType);
       if (rawText.trim()) formData.append("raw_text", rawText.trim());
       if (selectedFile) formData.append("file", selectedFile);
-
       const result = await api.uploadEvidence(caseId, formData);
       onEvidenceAdded(result);
       setRawText('');
       setSelectedFile(null);
     } catch (err) {
-      alert("Evidence ingestion error: " + err.message);
+      alert("Upload error: " + err.message);
     } finally {
       setIsUploading(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      
-      {/* Editorial Master Header Section matching Stitch Screen 1 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
-        <div style={{ maxWidth: '780px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="code-badge" style={{ color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              STAGE 01 // EVIDENCE ONBOARDING
-            </span>
-            <span style={{ color: 'var(--outline-variant)' }}>/</span>
-            <span className="label-pantone" style={{ color: 'var(--on-surface-variant)' }}>
-              CHAIN OF CUSTODY VERIFIED
-            </span>
-          </div>
-          <h1 style={{ fontSize: '36px', fontWeight: 800, textTransform: 'uppercase', lineHeight: 1.1 }}>
-            Ingest Unstructured Evidence
-          </h1>
-          <p style={{ fontSize: '15px', color: 'var(--on-surface-variant)', marginTop: '8px', lineHeight: 1.6 }}>
-            Upload screenshots, chat transcripts, UPI alerts, or paste raw communication logs. Our vision extraction models parse structured forensic entities without persisting unredacted PII.
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
+        <div style={{ maxWidth: 640 }}>
+          <p className="label" style={{ marginBottom: 6, color: 'var(--green-600)' }}>Step 1 — Evidence Ingestion</p>
+          <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Upload Evidence</h2>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            Upload screenshots, chat transcripts, UPI alerts, or paste raw communication logs. 
+            Structured entities are extracted automatically without persisting unredacted PII.
           </p>
         </div>
 
-        {/* Quick Metrics Deck (Pantone Swatch Metaphor) */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
-          
-          <div className="dossier-card" style={{ width: '130px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ background: 'var(--primary-container)', padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
-              <span className="label-pantone" style={{ color: 'var(--on-primary-container)', fontSize: '9px' }}>ITEMS</span>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>NODE</span>
-            </div>
-            <div style={{ padding: '8px 10px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontFamily: 'var(--font-headline)', fontSize: '28px', fontWeight: 800, color: 'var(--primary)', lineHeight: 1 }}>
-                {evidenceList.length < 10 ? `0${evidenceList.length}` : evidenceList.length}
-              </span>
-              <span className="code-badge" style={{ color: 'var(--on-surface-variant)', fontSize: '9px', textTransform: 'uppercase', marginTop: '2px' }}>
-                Archived Nodes
-              </span>
-            </div>
+        {/* Quick stats */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div className="stat-card" style={{ minWidth: 100 }}>
+            <span className="stat-label">Items</span>
+            <span className="stat-value" style={{ color: 'var(--green-800)' }}>
+              {String(evidenceList.length).padStart(2, '0')}
+            </span>
+            <span className="stat-sub">uploaded</span>
           </div>
-
-          <div className="dossier-card" style={{ width: '140px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ background: 'var(--primary)', padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
-              <span className="label-pantone" style={{ color: 'var(--on-primary-container)', fontSize: '9px' }}>ENTITIES</span>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>EXTRACT</span>
-            </div>
-            <div style={{ padding: '8px 10px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontFamily: 'var(--font-headline)', fontSize: '28px', fontWeight: 800, color: 'var(--primary)', lineHeight: 1 }}>
-                {evidenceList.length * 5}
-              </span>
-              <span className="code-badge" style={{ color: 'var(--on-surface-variant)', fontSize: '9px', textTransform: 'uppercase', marginTop: '2px' }}>
-                Isolated Fields
-              </span>
-            </div>
+          <div className="stat-card" style={{ minWidth: 100 }}>
+            <span className="stat-label">Fields</span>
+            <span className="stat-value" style={{ color: 'var(--green-800)' }}>
+              {String(evidenceList.length * 5).padStart(2, '0')}
+            </span>
+            <span className="stat-sub">extracted</span>
           </div>
-
-          <div className="dossier-card" style={{ width: '160px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ background: 'var(--secondary)', padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff' }}>
-              <span className="label-pantone" style={{ color: 'var(--secondary-fixed)', fontSize: '9px' }}>STATUS</span>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>PIPE</span>
-            </div>
-            <div style={{ padding: '8px 10px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontFamily: 'var(--font-headline)', fontSize: '18px', fontWeight: 800, color: 'var(--secondary)', lineHeight: 1, textTransform: 'uppercase' }}>
-                READY
-              </span>
-              <span className="code-badge" style={{ color: 'var(--on-surface-variant)', fontSize: '9px', textTransform: 'uppercase', marginTop: '4px' }}>
-                Reconciliation
-              </span>
-            </div>
+          <div className="stat-card" style={{ minWidth: 100, borderColor: evidenceList.length > 0 ? 'var(--green-100)' : 'var(--border)' }}>
+            <span className="stat-label">Status</span>
+            <span className="stat-value" style={{ fontSize: 16, color: evidenceList.length > 0 ? 'var(--green-600)' : 'var(--text-muted)' }}>
+              {evidenceList.length > 0 ? 'Ready' : 'Waiting'}
+            </span>
+            <span className="stat-sub">for timeline</span>
           </div>
-
         </div>
       </div>
 
-      {/* Mode Selector Ribbon matching Stitch */}
-      <div style={{ background: 'var(--surface-low)', padding: '6px 16px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', gap: '6px', background: 'var(--surface-high)', padding: '4px', borderRadius: '24px' }}>
+      {/* Mode Toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div className="stepper-nav" style={{ flex: '0 1 auto' }}>
           <button
             onClick={() => setMode('files')}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '20px',
-              border: 'none',
-              background: mode === 'files' ? 'var(--primary)' : 'transparent',
-              color: mode === 'files' ? '#ffffff' : 'var(--on-surface-variant)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '11px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              cursor: 'pointer'
-            }}
+            className={`step-tab ${mode === 'files' ? 'active' : ''}`}
           >
-            Upload Screenshots & Images (Active)
+            <Upload size={13} style={{ marginRight: 4 }} />
+            Upload Files
           </button>
           <button
             onClick={() => setMode('paste')}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '20px',
-              border: 'none',
-              background: mode === 'paste' ? 'var(--primary)' : 'transparent',
-              color: mode === 'paste' ? '#ffffff' : 'var(--on-surface-variant)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '11px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              cursor: 'pointer'
-            }}
+            className={`step-tab ${mode === 'paste' ? 'active' : ''}`}
           >
-            Paste Raw Text / Logs
+            Paste Text
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '11px', color: 'var(--on-surface-variant)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }}></span>
-            <span className="label-pantone">OCR Vision Engine 4.2 vLLM</span>
-          </div>
-          <span style={{ color: 'var(--outline-variant)' }}>•</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }}></span>
-            <span className="label-pantone">No Cloud GPU Retention</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="label" style={{ marginRight: 4 }}>Type:</span>
+          <select
+            className="input input-mono"
+            value={evidenceType}
+            onChange={(e) => setEvidenceType(e.target.value)}
+            style={{ width: 'auto', fontSize: 12 }}
+          >
+            <option value="sms">Bank / SMS Alert</option>
+            <option value="chat">WhatsApp / Threat Chat</option>
+            <option value="transaction">UPI / NetBanking Record</option>
+            <option value="email">Phishing Email</option>
+            <option value="app_notification">Push Notification</option>
+            <option value="log">Access / DNS Log</option>
+            <option value="other">Other Evidence</option>
+          </select>
         </div>
       </div>
 
-      {/* Upload Dropzone Container */}
-      <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        
-        {/* Modality Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label className="label-pantone" style={{ color: 'var(--primary)', minWidth: '130px' }}>Evidence Modality:</label>
-          <select
-            value={evidenceType}
-            onChange={(e) => setEvidenceType(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
-              background: '#fff',
-              color: 'var(--on-surface)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '13px',
-              fontWeight: 600
-            }}
-          >
-            <option value="sms">Bank / Carrier SMS Alert</option>
-            <option value="chat">WhatsApp / Telegram Threat Chat</option>
-            <option value="transaction">UPI / NetBanking Debit Record</option>
-            <option value="email">Phishing Email / Header</option>
-            <option value="app_notification">Mobile Push Notification</option>
-            <option value="log">Access Gateway / DNS Resolver Log</option>
-            <option value="other">Other Physical / Digital Evidence</option>
-          </select>
-        </div>
-
+      {/* Upload Form */}
+      <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {mode === 'files' ? (
-          <div
-            className="dossier-card"
-            style={{
-              padding: '48px 24px',
-              textAlign: 'center',
-              background: '#ffffff',
-              border: '2px dashed var(--border-subtle)',
-              position: 'relative',
-              cursor: 'pointer'
-            }}
-          >
+          <div className="dropzone">
             <input
               accept="image/*,.pdf,.txt"
               id="evidence-file-input"
@@ -222,127 +128,106 @@ export default function EvidenceUpload({
               onChange={(e) => setSelectedFile(e.target.files[0])}
             />
             <label htmlFor="evidence-file-input" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
-                <ImageIcon size={28} color="var(--primary)" />
+              <div style={{ 
+                width: 52, height: 52, borderRadius: '50%', 
+                background: 'var(--green-50)', border: '2px solid var(--green-100)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                marginBottom: 14 
+              }}>
+                <ImageIcon size={24} color="var(--green-600)" />
               </div>
-              <h2 style={{ fontSize: '20px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)' }}>
-                Drag fraud screenshots, UPI receipts, or SMS clips here
-              </h2>
-              <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)', marginTop: '4px', maxWidth: '500px' }}>
-                Supports PNG, JPG, PDF up to 25MB · Automated legal specimen identification applied on ingest.
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+                Drop fraud screenshots, UPI receipts, or SMS clips
               </p>
-
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 420 }}>
+                PNG, JPG, PDF up to 25MB · Automated entity extraction on ingest
+              </p>
               {selectedFile && (
-                <div style={{ marginTop: '16px', background: 'var(--surface-container)', padding: '6px 14px', borderRadius: '4px', fontWeight: 600, color: 'var(--primary)', fontSize: '13px' }}>
-                  Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                <div className="badge badge-green" style={{ marginTop: 14, fontSize: 12, padding: '5px 12px' }}>
+                  <CheckCircle2 size={14} />
+                  {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                 </div>
               )}
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <span className="btn-dossier-primary" style={{ pointerEvents: 'none' }}>
-                  <Upload size={14} />
-                  <span>Browse Evidence Files</span>
-                </span>
-              </div>
             </label>
-            <div className="code-badge" style={{ color: 'var(--outline)', marginTop: '20px', fontSize: '10px' }}>
-              AUTOMATIC EXIF CLEANING & TIMESTAMP ATTESTATION OCCURS CLIENT-SIDE
-            </div>
           </div>
         ) : (
-          <div className="dossier-card" style={{ padding: '24px', background: '#fff' }}>
-            <label className="label-pantone" style={{ display: 'block', color: 'var(--primary)', marginBottom: '8px' }}>
-              Raw Text / Telemetry Logs
+          <div className="card" style={{ padding: 20 }}>
+            <label className="label" style={{ display: 'block', marginBottom: 8 }}>
+              Raw Text / Communication Logs
             </label>
             <textarea
+              className="input input-mono"
               rows={5}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="Paste SMS text, WhatsApp transcript, phishing URL, or bank debit statement..."
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-subtle)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '13px',
-                outline: 'none',
-                resize: 'vertical'
-              }}
+              placeholder="Paste SMS text, WhatsApp transcript, phishing URL, or bank debit statement…"
             />
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <button
-            type="submit"
-            disabled={isUploading}
-            className="btn-dossier-primary"
-            style={{ padding: '10px 24px', fontSize: '13px' }}
-          >
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button type="submit" disabled={isUploading} className="btn btn-primary">
             {isUploading ? (
-              <span>Extracting forensic fields...</span>
+              <span>Extracting…</span>
             ) : (
               <>
-                <Plus size={16} />
-                <span>Ingest & Extract Specimen</span>
+                <Plus size={15} />
+                <span>Ingest & Extract</span>
               </>
             )}
           </button>
         </div>
       </form>
 
-      {/* Ingested Evidence Deck */}
+      {/* Ingested Evidence List */}
       {evidenceList.length > 0 && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
-              <h3 style={{ fontSize: '18px', textTransform: 'uppercase', fontWeight: 800 }}>
-                Archived Evidence Specimens ({evidenceList.length})
+              <h3 style={{ fontSize: 16, fontWeight: 700 }}>
+                Uploaded Evidence ({evidenceList.length})
               </h3>
-              <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
-                Each item is stamped with an immutable SHA-256 legal hold signature.
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
+                Each item is hashed with SHA-256 for chain-of-custody integrity.
               </p>
             </div>
-
-            <button
-              onClick={onNextToReview}
-              className="btn-dossier-primary"
-              style={{ background: 'var(--primary)', fontSize: '12px' }}
-            >
-              <span>Proceed to 2. Extraction Review</span>
-              <ArrowRight size={14} />
+            <button onClick={onNextToReview} className="btn btn-primary btn-sm">
+              Review Extractions <ArrowRight size={14} />
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
             {evidenceList.map((item, idx) => {
               const ext = item.extraction || {};
               return (
-                <div key={item.id} className="dossier-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  {/* Pantone Specimen Header Block */}
-                  <div style={{ background: 'var(--primary-container)', color: '#fff', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="code-badge" style={{ color: 'var(--on-primary-container)', fontSize: '10px' }}>#{idx + 1}</span>
-                      <span className="label-pantone" style={{ color: '#fff', fontSize: '10px' }}>{item.evidence_type}</span>
+                <div key={item.id} className="card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ 
+                    padding: '8px 14px', 
+                    background: 'var(--green-50)',
+                    borderBottom: '1px solid var(--green-100)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center' 
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="badge badge-green" style={{ padding: '2px 6px' }}>#{idx + 1}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--green-800)', textTransform: 'uppercase' }}>{item.evidence_type}</span>
                     </div>
                     {ext.extraction_confidence && (
-                      <span className="code-badge" style={{ background: 'rgba(255,255,255,0.15)', padding: '1px 6px', borderRadius: '2px', fontSize: '9px', textTransform: 'uppercase' }}>
-                        {ext.extraction_confidence} Conf
+                      <span className="badge badge-neutral" style={{ fontSize: 10 }}>
+                        {ext.extraction_confidence}
                       </span>
                     )}
                   </div>
-
-                  {/* Body Content */}
-                  <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <p style={{ fontSize: '13px', color: 'var(--on-surface)', lineHeight: 1.5, marginBottom: '12px' }}>
+                  <div style={{ padding: 14, flex: 1 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 10 }}>
                       {ext.raw_text_summary || item.raw_text || "Visual screenshot artifact recorded."}
                     </p>
-
-                    {/* Metadata Collar */}
-                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: 'var(--outline)', fontFamily: 'var(--font-mono)' }}>
-                      <span>TIME: {ext.timestamp ? ext.timestamp.substring(11, 19) + ' UTC' : 'NULL'}</span>
-                      <span>HASH: {item.sha256_hash ? item.sha256_hash.substring(0, 8) + '...' : 'SECURED'}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--text-faint)' }}>
+                      <span className="mono">
+                        {ext.timestamp ? new Date(ext.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' UTC' : '—'}
+                      </span>
+                      <span className="mono">
+                        SHA: {item.sha256_hash ? item.sha256_hash.substring(0, 8) + '…' : '—'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -351,7 +236,6 @@ export default function EvidenceUpload({
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -64,6 +64,24 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
+  requestOTP: (email) =>
+    request("/auth/otp/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyOTP: (email, otp) =>
+    request("/auth/otp/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  loginWithGoogle: (payload) =>
+    request("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   getMe: () => request("/auth/me"),
 
   // Cases

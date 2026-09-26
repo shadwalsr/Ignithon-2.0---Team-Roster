@@ -112,23 +112,39 @@ export default function Navbar({
           <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
 
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ 
-                width: 28, height: 28, borderRadius: '50%', 
-                background: 'var(--green-800)', color: '#fff', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                fontSize: 12, fontWeight: 700 
-              }}>
-                {user.email.substring(0, 1).toUpperCase()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 6, 
+                  background: 'var(--bg-subtle)', 
+                  border: '1px solid var(--border)', 
+                  padding: '3px 8px 3px 4px', 
+                  borderRadius: '20px' 
+                }}
+                title={user.email}
+              >
+                <div style={{ 
+                  width: 22, height: 22, borderRadius: '50%', 
+                  background: 'var(--green-800)', color: '#fff', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  fontSize: 11, fontWeight: 700 
+                }}>
+                  {user.email ? user.email.substring(0, 1).toUpperCase() : 'U'}
+                </div>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--text-secondary)', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.email.split('@')[0]}
+                </span>
               </div>
-              <button onClick={onLogout} className="btn btn-ghost btn-sm" title="Logout">
-                <LogOut size={13} />
+              <button onClick={onLogout} className="btn btn-ghost btn-sm" title="Log Out">
+                <LogOut size={14} />
               </button>
             </div>
           ) : (
             <button onClick={onOpenAuth} className="btn btn-primary btn-sm">
               <Lock size={13} />
-              <span>Login</span>
+              <span>Sign In</span>
             </button>
           )}
         </div>

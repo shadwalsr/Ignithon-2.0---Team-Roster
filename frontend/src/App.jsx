@@ -32,14 +32,22 @@ export default function App() {
           loadCases();
         } catch {
           clearToken();
-          autoDemoLogin();
+          setUser(null);
         }
-      } else {
-        autoDemoLogin();
       }
     }
     init();
   }, []);
+
+  async function handleLogout() {
+    clearToken();
+    setUser(null);
+    setCases([]);
+    setCurrentCase(null);
+    setEvidenceList([]);
+    setTimelineData(null);
+    setReportData(null);
+  }
 
   async function autoDemoLogin() {
     try {
@@ -83,6 +91,10 @@ export default function App() {
   }
 
   async function handleSeedCase() {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
     setLoading(true);
     setStatusMessage("Generating fraud scenario with gaps & contradictions…");
     try {
@@ -113,6 +125,10 @@ export default function App() {
   }
 
   async function handleCreateNewCase() {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
     const title = prompt("Enter Case Title:");
     if (!title?.trim()) return;
     try {
@@ -181,7 +197,7 @@ export default function App() {
         onNewCase={handleCreateNewCase}
         onSeedCase={handleSeedCase}
         user={user}
-        onLogout={() => { clearToken(); setUser(null); }}
+        onLogout={handleLogout}
         onOpenAuth={() => setIsAuthOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}

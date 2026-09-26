@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     # Reconciliation defaults
     DEFAULT_GAP_THRESHOLD_MINUTES: int = 20
 
+    # OTP Settings (In-memory 5-minute expiry)
+    OTP_EXPIRATION_MINUTES: int = 5
+    EMAIL_USER: str = os.getenv("EMAIL_USER", "")
+    EMAIL_PASS: str = os.getenv("EMAIL_PASS", "")
+
+    # Google OAuth Settings
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
 
 settings = Settings()

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, Mail, ShieldAlert, Key, ArrowRight, UserPlus, LogIn, Send, CheckCircle2, RefreshCw } from 'lucide-react';
 import { api, setToken } from '../api';
 
-const GOOGLE_CLIENT_ID = "868795125315-jaksiq9388cpgcbivmbmud5q9ibaq0ps.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   // Only 2 modes: 'login' (Email + Password only) | 'register' (Email + Password + OTP verification)
@@ -217,8 +217,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
   return (
     <div className="modal-backdrop fade-in" onClick={onClose}>
-      <div 
-        className="modal-card" 
+      <div
+        className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ padding: '30px 28px' }}
       >
@@ -260,8 +260,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             {mode === 'login' ? 'Investigator Sign In' : 'Create Forensic Account'}
           </h2>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {mode === 'login' 
-              ? 'Enter your credentials to access your cases' 
+            {mode === 'login'
+              ? 'Enter your credentials to access your cases'
               : 'Verify your Gmail address with a 5-minute one-time code'}
           </p>
         </div>
